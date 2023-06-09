@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Commands\" />
+    <None Remove="Analysis\" />
+    <None Remove="Output\" />
+    <None Remove="Commands\Analysus\" />
+    <None Remove="Templates\" />
+    <None Remove="Templates\Website\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Commands\" />
+    <Folder Include="Analysis\" />
+    <Folder Include="Commands\Analysis\" />
+    <Folder Include="Templates\" />
+    <Folder Include="Templates\Website\" />
+  </ItemGroup>
+</Project>
