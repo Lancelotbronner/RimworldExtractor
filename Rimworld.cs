@@ -1,4 +1,4 @@
-﻿namespace RimworldExplorer;
+﻿namespace RimworldExtractor;
 
 public static class Rimworld {
 

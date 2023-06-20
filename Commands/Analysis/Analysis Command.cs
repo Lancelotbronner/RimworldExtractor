@@ -1,9 +1,8 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Binding;
-using System.IO;
-using RimworldExplorer.Analysis;
+using RimworldExtractor.Analysis;
 
-namespace RimworldExplorer.Commands;
+namespace RimworldExtractor.Commands;
 
 public abstract class AnalysisCommand : Command {
 

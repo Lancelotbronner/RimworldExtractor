@@ -1,6 +1,6 @@
 ﻿using System.CommandLine;
 
-namespace RimworldExplorer.Commands;
+namespace RimworldExtractor.Commands;
 
 public sealed class AnalyzeCommand : Command {
 

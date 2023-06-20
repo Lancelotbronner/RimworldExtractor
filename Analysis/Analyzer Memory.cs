@@ -1,7 +1,6 @@
 ﻿using System.Xml;
-using System.Xml.Linq;
 
-namespace RimworldExplorer.Analysis;
+namespace RimworldExtractor.Analysis;
 
 public class InMemoryAnalyzer {
 
@@ -38,8 +37,8 @@ public class InMemoryAnalyzer {
 			.OrderBy(@class => @class.Name)
 			.ToArray(),
 
-		Warnings = _warnings,
-		Errors = _errors,
+		Warnings = _warnings.ToArray(),
+		Errors = _errors.ToArray(),
 	};
 
 	#region Configuration
@@ -143,7 +142,7 @@ public class InMemoryAnalyzer {
 
 			// Store the definition
 			string? parent = definition.HasAttribute("ParentName") ? definition.GetAttribute("ParentName") : null;
-			bool isAbstract = definition.HasAttribute("Abstract") ? definition.GetAttribute("Abstract") is "True" : false;
+			bool isAbstract = definition.HasAttribute("Abstract") && definition.GetAttribute("Abstract") is "True";
 			AnalysisDefinition def = _definitions[name] = new(name, filepath, module, type, parent, isAbstract);
 
 			ExploreDefinition(definition, def, null);

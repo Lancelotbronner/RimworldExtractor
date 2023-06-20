@@ -1,7 +1,7 @@
 ﻿using System.CommandLine;
-using RimworldExplorer.Analysis;
+using RimworldExtractor.Analysis;
 
-namespace RimworldExplorer.Commands;
+namespace RimworldExtractor.Commands;
 
 public sealed class JsonAnalysisCommand : AnalysisCommand {
 

@@ -1,14 +1,20 @@
-﻿namespace RimworldExplorer.Analysis;
+﻿namespace RimworldExtractor.Analysis;
 
 public sealed class AnalysisTag {
 
 	public AnalysisTag(string identifier, AnalysisModule? module) {
 		_identifier = identifier.Trim();
 		_module = module;
+
+		Title = identifier.ToTitleCase();
+		Title = RegexLibrary.DetectDefinitionAbbreviation().Replace(Title, "Definition");
+		Title = RegexLibrary.DetectTextureAbbreviation().Replace(Title, "Texture");
 	}
 
 	private readonly string _identifier;
 	private readonly AnalysisModule? _module;
+
+	public string Title { get; }
 
 	public string Name => _identifier;
 
@@ -35,12 +41,13 @@ public sealed class AnalysisTag {
 
 	#region Usage Methods
 
-	private HashSet<PropertyUsage> _uses = new();
+	private readonly HashSet<PropertyUsage> _uses = new();
 
 	public IReadOnlyCollection<PropertyUsage> Uses => _uses;
 
 	public IEnumerable<PropertyUsage> OrderedUses => _uses
-		.OrderBy(usage => usage.Definition.Name);
+		.OrderBy(usage => usage.Value)
+		.ThenBy(usage => usage.Definition.TypedIdentifier);
 
 	public IEnumerable<PropertyUsage> ExampleUses => ExamplesOf(_uses);
 

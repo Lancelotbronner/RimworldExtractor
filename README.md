@@ -6,6 +6,10 @@ This is currently in development as I'm still working on improving the analysis 
 
 ## Roadmap
 
+I'd like to make the analyzer use an SQLite database as its report and have the other
+report derivative use that database. This should also improve performance, memory usage
+and size in both the analyzer and the tools which will consume its reports.
+
 The analysis is the core of this tool, here's what I'm working on:
 
 - Type inference from usage

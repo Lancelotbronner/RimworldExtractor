@@ -1,8 +1,10 @@
-﻿using System.Xml;
+﻿using System.Reflection;
+using System.Text.RegularExpressions;
+using RimworldExtractor.Templates;
 
-namespace RimworldExplorer.Analysis;
+namespace RimworldExtractor.Analysis;
 
-public struct WebsiteAnalysisReportWriter {
+public readonly struct WebsiteAnalysisReportWriter {
 
 	public WebsiteAnalysisReportWriter(AnalysisReport report) {
 		_report = report;
@@ -10,85 +12,77 @@ public struct WebsiteAnalysisReportWriter {
 
 	private readonly AnalysisReport _report;
 
-	public void Produce() {
+	#region Writing Management
 
+	public async Task Produce() {
+		List<Task[]> groups = new(8);
+
+		TemplateEvaluator top = new();
+		top.Add(EvaluateToken);
+
+		// Write main navigation
+		Task index = ProcessTemplateAsync("index.html", top);
+		Task classes = ProcessTemplateAsync("classes.html", top);
+		Task definitions = ProcessTemplateAsync("definitions.html", top);
+		Task modules = ProcessTemplateAsync("modules.html", top);
+		Task tags = ProcessTemplateAsync("tags.html", top);
+
+		// Write all classes
+		Directory.CreateDirectory("classes");
+		groups.Add(_report.Classes.Select(schema => {
+			TemplateEvaluator evaluator = new();
+			evaluator.Add(schema, EvaluateSchemaToken);
+			evaluator.Add(EvaluateToken);
+			return ProcessTemplateAsync("class.html", $"classes/{schema.Name}.html", evaluator);
+		}).ToArray());
+
+		await Task.WhenAll(index, classes, definitions, modules, tags);
+		foreach (Task[] group in groups)
+			await Task.WhenAll(group);
 	}
 
-	public void ProcessClassTemplate(Span<char> file) {
-		//TODO: Token replacements
-	}
+	#endregion
 
 	#region Templating Management
 
-	public ReadOnlySpan<char> Template(string filename) {
-		//TODO: Retrieve template from assembly
-		return "";
+	private static async Task ProcessTemplateAsync(string template, string filename, TemplateEvaluator evaluator) {
+		string contents = await GetTemplateAsync(template);
+		await File.WriteAllTextAsync(filename, evaluator.Evaluate(contents));
 	}
 
-	private readonly XmlWriterSettings? _settings;
+	private static Task ProcessTemplateAsync(string filename, TemplateEvaluator evaluator)
+		=> ProcessTemplateAsync(filename, filename, evaluator);
 
-	public void HTML(string filename, Action<XmlWriter> head, Action<XmlWriter> body) {
-		XmlWriter document = XmlWriter.Create(File.OpenWrite(filename), _settings);
-		document.WriteDocType("html", null, null, null);
+	public string? EvaluateToken(ref ReadOnlySpan<char> token) => token switch {
+		"Title" => _report.Title,
+		"Version" => _report.Version,
+		"Classes.Count" => _report.Classes.Length.ToString(),
+		"Definitions.Count" => _report.Definitions.Length.ToString(),
+		"Modules.Count" => _report.Modules.Length.ToString(),
+		"Tags.Count" => _report.Tags.Length.ToString(),
+		_ => null,
+	};
 
-		document.WriteStartElement("html");
-		document.WriteAttributeString("lang", "en");
-		document.WriteAttributeString("dir", "ltr");
+	public static string? EvaluateSchemaToken(AnalysisClass schema, ref ReadOnlySpan<char> token) => token switch {
+		"Identifier" => schema.Name,
+		"Title" => schema.Title,
+		_ => null,
+	};
 
-		document.WriteStartElement("head");
-		WriteHead(document, _report.Title, _report.Version);
-		head.Invoke(document);
-		document.WriteEndElement();
+	private readonly static Assembly CurrentAssembly = Assembly.GetAssembly(typeof(WebsiteAnalysisReportWriter))!;
+	const string ResourcePrefix = "RimworldExtractor.Templates.Website.";
 
-		document.WriteStartElement("body");
-		body.Invoke(document);
-		document.WriteEndElement();
+	private readonly static string AvailableResources = string.Join(", ", CurrentAssembly
+		.GetManifestResourceNames()
+		.Where(name => name.StartsWith(ResourcePrefix))
+		.Select(name => $"'{name[ResourcePrefix.Length..]}'"));
 
-		document.WriteEndDocument();
+	private static Task<string> GetTemplateAsync(string filename) {
+		Assembly assembly = Assembly.GetExecutingAssembly();
+		using Stream? stream = assembly.GetManifestResourceStream($"{ResourcePrefix}{filename}") ?? throw new($"Unknown template '{filename}', available templates are {AvailableResources}");
+		using TextReader text = new StreamReader(stream);
+		return text.ReadToEndAsync();
 	}
-
-	#endregion
-
-	#region Section Methods
-
-	public void WriteHead(XmlWriter document, string title, string version) {
-		// Title tag
-		document.WriteStartElement("title");
-		document.WriteValue($"{title} v{version}");
-		document.WriteEndElement();
-
-		// Keywords tag
-		document.WriteStartElement("meta");
-		document.WriteAttributeString("name", "keywords");
-		document.WriteAttributeString("content", "RimWorld");
-		document.WriteEndElement();
-
-		// Description tag
-		document.WriteStartElement("meta");
-		document.WriteAttributeString("name", "description");
-		document.WriteAttributeString("content", $"Auto-generated {title} v{version} documentation");
-		document.WriteEndElement();
-	}
-
-	#endregion
-
-	#region Fragment Methods
-
-	public void LinkToTag(XmlWriter document, AnalysisTag tag)
-		=> document.WriteAttributeString("href", GetTagAnchor(tag));
-
-	public void LinkToDefinition(XmlWriter document, AnalysisDefinition definition)
-		=> document.WriteAttributeString("href", GetDefinitionAnchor(definition));
-
-	#endregion
-
-	#region Utility Methods
-
-	public static string GetTagAnchor(AnalysisTag tag)
-		=> $"#tag-{tag.Name}";
-
-	public static string GetDefinitionAnchor(AnalysisDefinition definition)
-		=> $"#definition-{definition.TypedIdentifier}";
 
 	#endregion
 

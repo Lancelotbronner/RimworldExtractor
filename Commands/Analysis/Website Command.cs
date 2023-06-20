@@ -1,7 +1,7 @@
 ﻿using System.CommandLine;
-using RimworldExplorer.Analysis;
+using RimworldExtractor.Analysis;
 
-namespace RimworldExplorer.Commands;
+namespace RimworldExtractor.Commands;
 
 public sealed class WebsiteAnalysisCommand : AnalysisCommand {
 
@@ -16,16 +16,19 @@ public sealed class WebsiteAnalysisCommand : AnalysisCommand {
 		this.SetHandler(Handle, parameters, Output);
 	}
 
-	public static void Handle(AnalysisParameterPack parameters, DirectoryInfo output) {
+	public static async Task Handle(AnalysisParameterPack parameters, DirectoryInfo output) {
 		Announce();
 		Analyze(in parameters, out AnalysisReport report);
 
 		// Prepare the report writer
-		using FileStream file = File.OpenWrite(output.FullName);
+		if (output.Exists)
+			output.Delete(true);
+		output.Create();
 		WebsiteAnalysisReportWriter writer = new(report);
 
 		// Produce the report
-		writer.Produce();
+		Directory.SetCurrentDirectory(output.FullName);
+		await writer.Produce();
 	}
 
 }

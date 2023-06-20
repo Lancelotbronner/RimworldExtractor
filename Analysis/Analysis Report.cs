@@ -1,24 +1,25 @@
-﻿namespace RimworldExplorer.Analysis;
+﻿namespace RimworldExtractor.Analysis;
 
 public readonly struct AnalysisReport {
 
 	public string Title { get; init; }
 	public string Version { get; init; }
 
-	public IReadOnlyCollection<AnalysisModule> Modules { get; init; }
-	public IEnumerable<AnalysisModule> OrderedModules => Modules.OrderBy(module => module.Identifier);
+	public AnalysisModule[] Modules { get; init; }
 
-	public IReadOnlyCollection<AnalysisClass> Classes { get; init; }
-	public IEnumerable<AnalysisClass> OrderedClasses => Classes.OrderBy(type => type.Name);
+	public AnalysisClass[] Classes { get; init; }
 
-	public IReadOnlyCollection<AnalysisTag> Tags { get; init; }
-	public IEnumerable<AnalysisTag> OrderedTags => Tags.OrderBy(tag => tag.Name);
+	public AnalysisTag[] Tags { get; init; }
 
-	public IReadOnlyCollection<AnalysisDefinition> Definitions { get; init; }
-	public IEnumerable<AnalysisDefinition> OrderedDefinitions => Definitions.OrderBy(definition => definition.Class.Name).ThenBy(definition => definition.Name);
+	public AnalysisDefinition[] Definitions { get; init; }
 
-	public IReadOnlyCollection<string> Warnings { get; init; }
-	public IReadOnlyCollection<string> Errors { get; init; }
+	public IReadOnlyList<string> Warnings { get; init; }
+	public IReadOnlyList<string> Errors { get; init; }
+
+	public int IndexOf(AnalysisClass @class)
+		=> Array.IndexOf(Classes, @class);
+
+	public int IndexOf(AnalysisTag tag)
+		=> Array.IndexOf(Tags, tag);
 
 }
-

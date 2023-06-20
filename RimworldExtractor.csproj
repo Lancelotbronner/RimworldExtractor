@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<WarningLevel>4</WarningLevel>
+		<AssemblyName>rimworld-extractor</AssemblyName>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Templates\Website\definition.html" />
+	  <EmbeddedResource Include="Templates\Website\tags.html" />
+	  <EmbeddedResource Include="Templates\Website\index.html" />
+	  <EmbeddedResource Include="Templates\Website\modules.html" />
+	  <EmbeddedResource Include="Templates\Website\definitions.html" />
+	  <EmbeddedResource Include="Templates\Website\module.html" />
+	  <EmbeddedResource Include="Templates\Website\tag.html" />
+	  <EmbeddedResource Include="Templates\Website\class.html" />
+	  <EmbeddedResource Include="Templates\Website\classes.html" />
+	</ItemGroup>
+</Project>

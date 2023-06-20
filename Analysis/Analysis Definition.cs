@@ -1,10 +1,11 @@
-﻿namespace RimworldExplorer.Analysis;
+﻿namespace RimworldExtractor.Analysis;
 
 public sealed class AnalysisDefinition {
 
 	public AnalysisDefinition(string identifier, string path, AnalysisModule module, AnalysisClass type, string? parent, bool isAbstract) {
 		_identifier = identifier.Trim();
 		_module = module;
+		_module.AddDefinition(this);
 		_path = module.GetRelativeDefinitionPath(path);
 		_class = type;
 

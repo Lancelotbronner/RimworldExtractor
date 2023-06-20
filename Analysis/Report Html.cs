@@ -1,6 +1,6 @@
 ﻿using System.Xml;
 
-namespace RimworldExplorer.Analysis;
+namespace RimworldExtractor.Analysis;
 
 public struct HtmlAnalysisReportWriter {
 

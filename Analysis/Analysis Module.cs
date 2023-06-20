@@ -1,4 +1,4 @@
-﻿namespace RimworldExplorer.Analysis;
+﻿namespace RimworldExtractor.Analysis;
 
 public sealed class AnalysisModule {
 
@@ -11,6 +11,12 @@ public sealed class AnalysisModule {
 	public string Identifier => Path.GetFileName(_path) ?? _path;
 
 	#region Definition Methods
+
+	public readonly HashSet<AnalysisDefinition> _definitions = new();
+	public IReadOnlyCollection<AnalysisDefinition> Definitions => _definitions;
+
+	public void AddDefinition(AnalysisDefinition definition)
+		=> _definitions.Add(definition);
 
 	public string GetRelativeDefinitionPath(string path)
 		=> Path.GetRelativePath(Path.Combine(_path, "Defs"), path);

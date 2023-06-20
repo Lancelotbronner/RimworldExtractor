@@ -1,9 +1,8 @@
-﻿using System.Runtime.Intrinsics.X86;
-using System.Text.Json;
+﻿using System.Text.Json;
 
-namespace RimworldExplorer.Analysis;
+namespace RimworldExtractor.Analysis;
 
-public struct JsonAnalysisReportWriter : IDisposable {
+public readonly struct JsonAnalysisReportWriter : IDisposable {
 
 	public JsonAnalysisReportWriter(AnalysisReport report, Stream stream, JsonWriterOptions options = default) {
 		_report = report;
@@ -37,6 +36,7 @@ public struct JsonAnalysisReportWriter : IDisposable {
 	private void WriteMetadata() {
 		_document.WriteStartObject("metadata");
 
+		_document.WriteNumber("format", 1);
 		_document.WriteString("title", _report.Title);
 		_document.WriteString("version", _report.Version);
 
@@ -62,14 +62,17 @@ public struct JsonAnalysisReportWriter : IDisposable {
 	#region Module Methods
 
 	private void WriteModules() {
-		_document.WriteStartObject("modules");
+		_document.WriteStartArray("modules");
 
-		foreach (AnalysisModule module in _report.OrderedModules) {
-			_document.WriteStartObject(module.Identifier);
-			_document.WriteEndObject();
+		foreach (AnalysisModule module in _report.Modules) {
+			_document.WriteStartArray();
+
+			_document.WriteStringValue(module.Identifier);
+
+			_document.WriteEndArray();
 		}
 
-		_document.WriteEndObject();
+		_document.WriteEndArray();
 	}
 
 	#endregion
@@ -77,14 +80,18 @@ public struct JsonAnalysisReportWriter : IDisposable {
 	#region Class Methods
 
 	private void WriteClasses() {
-		_document.WriteStartObject("classes");
+		_document.WriteStartArray("classes");
 
-		foreach (AnalysisClass @class in _report.OrderedClasses) {
-			_document.WriteStartObject(@class.Name);
-			_document.WriteEndObject();
+		foreach (AnalysisClass @class in _report.Classes) {
+			_document.WriteStartArray();
+
+			_document.WriteStringValue(@class.Name);
+			_document.WriteStringValue(@class.Title);
+
+			_document.WriteEndArray();
 		}
 
-		_document.WriteEndObject();
+		_document.WriteEndArray();
 	}
 
 	#endregion
@@ -92,143 +99,59 @@ public struct JsonAnalysisReportWriter : IDisposable {
 	#region Tag Methods
 
 	private void WriteTags() {
-		_document.WriteStartObject("tags");
+		_document.WriteStartArray("tags");
 
-		foreach (AnalysisTag tag in _report.OrderedTags) {
-			_document.WriteStartObject(tag.Name);
+		foreach (AnalysisTag tag in _report.Tags) {
+			_document.WriteStartArray();
 
-			if (tag.Children.Count > 0) {
-				_document.WriteStartArray("children");
+			_document.WriteStringValue(tag.Name);
+			_document.WriteStringValue(tag.Title);
+
+				_document.WriteStartArray();
 				foreach (AnalysisTag child in tag.OrderedChildren)
-					_document.WriteStringValue(child.Name);
+					_document.WriteNumberValue(_report.IndexOf(child));
 				_document.WriteEndArray();
-			}
 
-			if (tag.Parents.Count > 0) {
-				_document.WriteStartObject("contexts");
+				_document.WriteStartArray();
 				foreach (AnalysisTag parent in tag.OrderedParents)
 					WriteTagContext(tag, parent);
-				_document.WriteEndObject();
-			}
+				_document.WriteEndArray();
 
-			_document.WriteEndObject();
+			_document.WriteEndArray();
 		}
 
-		_document.WriteEndObject();
+		_document.WriteEndArray();
 	}
 
 	private void WriteTagContext(AnalysisTag tag, AnalysisTag context) {
-		PropertyUsage[] uses = tag.OrderedUses
+		ILookup<string, PropertyUsage> examples = tag.OrderedUses
 			.Where(use => use.Parent == context)
-			.ToArray();
+			.ToLookup(use => use.Value);
 
-		if (uses.Length is 0)
+		if (examples.Count is 0)
 			return;
 
-		_document.WriteStartObject(context.Name);
-
-		string[] examples = uses
-			.Select(use => use.Value)
-			.Distinct()
-			.ToArray();
+		_document.WriteStartArray();
+		_document.WriteNumberValue(_report.IndexOf(context));
 
 		// Write distinct examples
-		_document.WriteStartArray("examples");
-		foreach (string example in examples)
-			_document.WriteStringValue(example);
-		_document.WriteEndArray();
-
-		// Write example index per definition
-		_document.WriteStartObject("usage");
-		foreach (var group in uses.ToLookup(use => use.Definition)) {
-			//TODO: Possibly group them by class (ThingDef)
-			_document.WritePropertyName(group.Key.TypedIdentifier);
-
-			var enumerator = group.GetEnumerator();
-			enumerator.MoveNext();
-			PropertyUsage first = enumerator.Current;
-			bool many = enumerator.MoveNext();
-
-			if (many)
-				_document.WriteStartArray();
-
-			_document.WriteNumberValue(Array.IndexOf(examples, first.Value));
-
-			if (many) {
-				do
-					_document.WriteNumberValue(Array.IndexOf(examples, enumerator.Current.Value));
-				while (enumerator.MoveNext());
-				_document.WriteEndArray();
-			}
-		}
-		_document.WriteEndObject();
-
-		_document.WriteEndObject();
-	}
-
-	private void WriteTagUse(string value, string[] examples) {
-		int i = Array.IndexOf(examples, value);
-		_document.WriteNumberValue(i);
-	}
-
-	private void WriteTagExamples(IEnumerable<PropertyUsage> examples) {
 		_document.WriteStartArray();
-		foreach (PropertyUsage example in examples)
-			_document.WriteStringValue(example.Value);
+		foreach (var example in examples)
+			_document.WriteStringValue(example.Key);
+		_document.WriteEndArray();
+
+		// Write definitions per example
+		_document.WriteStartArray();
+		foreach (var example in examples) {
+			_document.WriteStartArray();
+			foreach (PropertyUsage use in example)
+				_document.WriteStringValue(use.Definition.TypedIdentifier);
+			_document.WriteEndArray();
+		}
+		_document.WriteEndArray();
+
 		_document.WriteEndArray();
 	}
-
-	private void WriteTagUses(IEnumerable<PropertyUsage> uses, PropertyUsage[] examples) {
-		_document.WriteStartObject();
-		foreach (var definition in uses.ToLookup(use => use.Definition)) {
-			PropertyUsage[] group = definition.ToArray();
-			_document.WritePropertyName(definition.Key.TypedIdentifier);
-
-			if (group.Length is 1) {
-				//_document.WriteNumberValue(Array.IndexOf(examples, group[0].Value));
-				_document.WriteStartObject();
-				_document.WriteNumber("i", Array.IndexOf(examples, group[0].Value));
-				_document.WriteString("v", group[0].Value);
-				_document.WriteEndObject();
-			} else {
-				_document.WriteStartArray();
-				foreach (PropertyUsage use in definition) {
-					//_document.WriteNumberValue(Array.IndexOf(examples, use.Value));
-
-					_document.WriteStartObject();
-					_document.WriteNumber("i", Array.IndexOf(examples, use.Value));
-					_document.WriteString("v", use.Value);
-					_document.WriteEndObject();
-				}
-				_document.WriteEndArray();
-			}
-		}
-		_document.WriteEndObject();
-	}
-
-	private IEnumerable<IEnumerable<PropertyUsage>> WriteByTagParent(AnalysisTag tag, IEnumerable<PropertyUsage> uses) {
-		if (tag.Parents.Count is 1) {
-			yield return uses;
-			yield break;
-		}
-
-		_document.WriteStartObject();
-		foreach (AnalysisTag parent in tag.OrderedParents) {
-			_document.WritePropertyName(parent.Name);
-			yield return uses.Where(use => use.Parent == parent);
-		}
-		_document.WriteEndObject();
-	}
-
-	private IEnumerable<IEnumerable<PropertyUsage>> WriteByTagParent(string property, AnalysisTag tag, IReadOnlyCollection<PropertyUsage> uses) {
-		if (uses.Count is 0)
-			return Array.Empty<IEnumerable<PropertyUsage>>();
-		_document.WritePropertyName(property);
-		return WriteByTagParent(tag, uses);
-	}
-
-	private IEnumerable<IEnumerable<PropertyUsage>> WriteByTagParent(string property, AnalysisTag tag, IEnumerable<PropertyUsage> uses)
-		=> WriteByTagParent(property, tag, uses.ToArray());
 
 	#endregion
 
@@ -237,11 +160,11 @@ public struct JsonAnalysisReportWriter : IDisposable {
 	private void WriteTemplates() {
 		_document.WriteStartObject("templates");
 
-		ILookup<AnalysisModule, AnalysisDefinition> TemplatesByModule = _report.OrderedDefinitions
+		ILookup<AnalysisModule, AnalysisDefinition> TemplatesByModule = _report.Definitions
 			.Where(definition => definition.IsAbstract)
 			.ToLookup(definition => definition.Module);
 
-		foreach (AnalysisModule module in _report.OrderedModules) {
+		foreach (AnalysisModule module in _report.Modules) {
 			AnalysisDefinition[] templatesWithinModule = TemplatesByModule[module].ToArray();
 			if (templatesWithinModule.Length is 0)
 				continue;
@@ -251,7 +174,7 @@ public struct JsonAnalysisReportWriter : IDisposable {
 
 			_document.WriteStartObject(module.Identifier);
 
-			foreach (AnalysisClass type in _report.OrderedClasses) {
+			foreach (AnalysisClass type in _report.Classes) {
 				AnalysisDefinition[] templatesWithinClass = TemplatesByClass[type].ToArray();
 				if (templatesWithinClass.Length is 0)
 					continue;
@@ -283,11 +206,11 @@ public struct JsonAnalysisReportWriter : IDisposable {
 	private void WriteDefinitions() {
 		_document.WriteStartObject("definitions");
 
-		ILookup<AnalysisModule, AnalysisDefinition> DefinitionsByModule = _report.OrderedDefinitions
+		ILookup<AnalysisModule, AnalysisDefinition> DefinitionsByModule = _report.Definitions
 			.Where(definition => !definition.IsAbstract)
 			.ToLookup(definition => definition.Module);
 
-		foreach (AnalysisModule module in _report.OrderedModules) {
+		foreach (AnalysisModule module in _report.Modules) {
 			AnalysisDefinition[] definitionsWithinModule = DefinitionsByModule[module].ToArray();
 			if (definitionsWithinModule.Length is 0)
 				continue;
@@ -297,7 +220,7 @@ public struct JsonAnalysisReportWriter : IDisposable {
 
 			_document.WriteStartObject(module.Identifier);
 
-			foreach (AnalysisClass type in _report.OrderedClasses) {
+			foreach (AnalysisClass type in _report.Classes) {
 				AnalysisDefinition[] definitionsWithinClass = DefinitionsByClass[type].ToArray();
 				if (definitionsWithinClass.Length is 0)
 					continue;
