@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>rimworld-analyzer</AssemblyName>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	  <DebugSymbols>true</DebugSymbols>
+	  <WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.8" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Templates\Website\definition.html" />
+	  <EmbeddedResource Include="Templates\Website\tags.html" />
+	  <EmbeddedResource Include="Templates\Website\index.html" />
+	  <EmbeddedResource Include="Templates\Website\modules.html" />
+	  <EmbeddedResource Include="Templates\Website\definitions.html" />
+	  <EmbeddedResource Include="Templates\Website\module.html" />
+	  <EmbeddedResource Include="Templates\Website\tag.html" />
+	  <EmbeddedResource Include="Templates\Website\class.html" />
+	  <EmbeddedResource Include="Templates\Website\classes.html" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Report\" />
+	  <None Remove="Parameters\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Report\" />
+	  <Folder Include="Parameters\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\RimworldAnalyzer.Analysis\RimworldAnalyzer.Analysis.csproj" />
+	</ItemGroup>
+</Project>
