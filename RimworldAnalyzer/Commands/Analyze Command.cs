@@ -66,12 +66,17 @@ public sealed class AnalyzeCommand : Command {
 
 		Analyzer analyzer = new(parameters.Options, context);
 
-		Task official = Task.WhenAll(parameters.OfficialModules.Select(analyzer.AnalyzeOfficialModule));
-		Task workshop = Task.WhenAll(parameters.WorkshopModules.Select(analyzer.AnalyzeWorkshopModule));
-		Task installed = Task.WhenAll(parameters.InstalledModules.Select(analyzer.AnalyzeInstalledModule));
-		Task other = Task.WhenAll(parameters.Modules.Select(module => analyzer.AnalyzeOtherModule(module.FullName)));
+		foreach (string _official in parameters.OfficialModules)
+			await analyzer.AnalyzeOfficialModule(_official);
 
-		await Task.WhenAll(official, workshop, installed, other);
+		foreach (string _workshop in parameters.WorkshopModules)
+			await analyzer.AnalyzeWorkshopModule(_workshop);
+
+		foreach (string _installed in parameters.InstalledModules)
+			await analyzer.AnalyzeInstalledModule(_installed);
+
+		foreach (DirectoryInfo _module in parameters.Modules)
+			await analyzer.AnalyzeOtherModule(_module.FullName);
 	}
 
 	#region Options Management

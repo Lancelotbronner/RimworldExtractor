@@ -3,9 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 25.0.1705.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RimworldAnalyzer", "RimworldAnalyzer/RimworldAnalyzer.csproj", "{58F7185E-D41F-4B23-BE22-58A8DE86E9E2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RimworldAnalyzer", "RimworldAnalyzer\RimworldAnalyzer.csproj", "{58F7185E-D41F-4B23-BE22-58A8DE86E9E2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RimworldAnalyzer.Analysis", "RimworldAnalyzer.Analysis\RimworldAnalyzer.Analysis.csproj", "{2576E480-46C7-4875-834B-48FAF5F68515}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{036AEEA3-6B66-44A6-BA4C-67385DB8D5E9}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -100,7 +100,7 @@ public static class Rimworld {
 	#region Installed Module Management
 
 	public static string GetInstalledModule(string module)
-		=> Path.Join(Installation.FullName, "Mods", module);
+		=> Path.Combine(Installation.FullName, "Mods", module);
 
 	public static IEnumerable<string> GetAvailableInstalledModules()
 		=> Directory.EnumerateDirectories(Path.Join(Installation.FullName, "Mods"));
@@ -110,7 +110,7 @@ public static class Rimworld {
 	#region Workshop Module Management
 
 	public static string GetWorkshopModule(string module)
-		=> Path.Join(Workshop.FullName, module);
+		=> Path.Combine(Workshop.FullName, module);
 
 	public static IEnumerable<string> GetAvailableWorkshopModules()
 		=> Directory.EnumerateDirectories(Workshop.FullName);

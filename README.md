@@ -2,26 +2,32 @@
 
 This is a very simple tool to extract and analyze XML tag usage of Rimworld mods.
 
-This is currently in development as I'm still working on improving the analysis and the report JSON format.
+This is currently in development. It can produce reports and still needs transformation commands.
+
+```sh
+# Analyze official modules, like Core and expansions
+rimworld-analyzer --include-officials
+```
+
+## Features
+
+- Collects XML tag and attribute examples
+- Includes tag context, so you will know the parent of tags under `li`
+- Includes modules, definitions and filepaths for a better overview
+- Reports are simple SQLite databases for easier transformation and consumption
 
 ## Roadmap
 
-I'd like to make the analyzer use an SQLite database as its report and have the other
-report derivative use that database. This should also improve performance, memory usage
-and size in both the analyzer and the tools which will consume its reports.
+I'd like to provide a versioned JSON format which mirrors the SQLite database.
 
-The analysis is the core of this tool, here's what I'm working on:
+Here's what I'd like to improve on the analysis:
 
-- Type inference from usage
+- Type inference from examples
 - Inferring polymorphic relationships on tags
-- Inferring tag collections
+- Inferring tag collections (arrays with `li`)
 
-The JSON format is one of the best way to share those analysis results. I'd like to reduce its physical size to be more portable. Here's what I'm working on:
+I'd like to add the possibility to ignore usage or resources while analyzing to reduce the size of the report.
+In the meantime a transformation command to strip them should be sufficient.
 
-- Format version
-- Reducing duplicate information
-- Indexing collections
-
-I'm also working on a very basic templated static site to display the analysis results on the web. This could be hosted for the whole community to use.
-
-Futur directions include associating markdown documentation to modules, classes and tags in order to improve the available information by sharing knowledge. I'm considering exploring the idea of producing a Symbol Graph to use the already existing documentation infrastructure [DocC](https://developer.apple.com/documentation/docc).
+Futur directions include associating markdown documentation to modules, classes, tags and attributes in order to improve the available information by sharing knowledge.
+I'm considering exploring the idea of producing a Symbol Graph to use the already existing documentation infrastructure of  [DocC](https://developer.apple.com/documentation/docc).

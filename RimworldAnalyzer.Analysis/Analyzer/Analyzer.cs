@@ -70,7 +70,7 @@ public class Analyzer {
 		string pathOfAbout = Path.Join(path, "About", "About.xml");
 
 		if (!File.Exists(pathOfAbout))
-			throw new("Invalid Rimworld module: missing About/About.xml");
+			throw new($"Invalid Rimworld module: missing About/About.xml at '{path}'");
 
 		XmlDocument about = new();
 
@@ -78,9 +78,10 @@ public class Analyzer {
 		about.Load(file);
 
 		string filename = Path.GetFileName(path);
-		string? identifier = about.GetElementsByTagName("packageId")[0]?.Value;
-		string? name = about.GetElementsByTagName("name")[0]?.Value;
-		string? version = about.GetElementsByTagName("modVersion")[0]?.Value;
+		//TODO: Retrieve the correct one, XPath?
+		string? identifier = about.GetElementsByTagName("packageId")[0]?.InnerText;
+		string? name = about.GetElementsByTagName("name")[0]?.InnerText;
+		string? version = about.GetElementsByTagName("modVersion")[0]?.InnerText;
 
 		ModuleTable module = await _context.GetOrCreateModule(identifier ?? filename);
 		module.Name = name ?? filename;
@@ -102,15 +103,17 @@ public class Analyzer {
 		// Traverse XML definition files
 		string directory = Path.Join(path, "Defs");
 
-		string[] resources = Directory
-			.EnumerateFiles(directory, "*.xml", SearchOption.AllDirectories)
-			.Order()
-			.ToArray();
+		if (Directory.Exists(directory)) {
+			string[] resources = Directory
+				.EnumerateFiles(directory, "*.xml", SearchOption.AllDirectories)
+				.Order()
+				.ToArray();
 
-		Debug.WriteLine($"Parsing {resources.Length} definition file(s)");
+			Debug.WriteLine($"Parsing {resources.Length} definition file(s)");
 
-		foreach (string resource in resources)
-			await AnalyzeResourceXML(resource, directory, module);
+			foreach (string resource in resources)
+				await AnalyzeResourceXML(resource, directory, module);
+		}
 
 		//Debug.WriteLine($"Completed analysis of {module.Name} with {_errors.Count} errors and {_warnings.Count} warnings");
 		//Terminal.Information($"Analyzed {_tags.Count} tags across {_definitions.Count} definitions of {_classes.Count} types within {_modules.Count} modules");
@@ -216,13 +219,13 @@ public class Analyzer {
 
 	private async Task AnalyzeTag(XmlElement node, ModuleTable module, ResourceTable resource) {
 		// Collection information on the tag
-		string? value = node.ChildNodes.Count is 1 && node.FirstChild is XmlText text ? text.InnerText : null;
+		string? rawValue = node.ChildNodes.Count is 1 && node.FirstChild is XmlText text ? text.InnerText : null;
 		TagBehaviour behaviour = Options.BehaviourOfTag(node.Name);
 
 		// Log the tag
 		string log = Path.Join(module.Identifier, resource.Path, node.Name);
-		if (value is not null)
-			log += @$" ""{value}""";
+		if (rawValue is not null)
+			log += @$" ""{rawValue}""";
 		Debug.WriteLine(log);
 
 		// Update the tag
@@ -248,8 +251,11 @@ public class Analyzer {
 		//	_tagParent = array;
 		//}
 
-		if (behaviour.HasFlag(TagBehaviour.CollectExamples) && value is not null)
-			await _context.GetOrCreateTagExample(tag, parent!, _definition, await _context.GetOrCreateExample(value));
+		if (behaviour.HasFlag(TagBehaviour.CollectExamples) && rawValue is not null) {
+			ExampleTable value = await _context.GetOrCreateExample(rawValue);
+			TagExampleTable example = await _context.GetOrCreateTagExample(tag, parent!, value);
+			await _context.GetOrCreateTagUsage(_definition, example);
+		}
 
 		if (behaviour.HasFlag(TagBehaviour.Traverse))
 			await Task.WhenAll(node.OfType<XmlElement>().Select(node => AnalyzeTag(node, module, resource)));
@@ -261,8 +267,11 @@ public class Analyzer {
 		AttributeBehaviour behaviour = Options.BehaviourOfAttribute(node.Name);
 		AttributeTable attribute = await _context.GetOrCreateAttribute(node.Name);
 
-		if (behaviour.HasFlag(AttributeBehaviour.CollectExamples))
-			await _context.GetOrCreateAttributeExample(attribute, _tagParent!, _definition, await _context.GetOrCreateExample(node.Value));
+		if (behaviour.HasFlag(AttributeBehaviour.CollectExamples)) {
+			ExampleTable value = await _context.GetOrCreateExample(node.Value);
+			AttributeExampleTable example = await _context.GetOrCreateAttributeExample(attribute, _tagParent!, value);
+			await _context.GetOrCreateAttributeUsage(_definition, example);
+		}
 	}
 
 	#endregion

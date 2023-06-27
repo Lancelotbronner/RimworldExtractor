@@ -1,24 +1,26 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace RimworldAnalyzer.Analysis;
 
-[Table("attribute-examples"), PrimaryKey(nameof(ExampleId), nameof(TagId), nameof(AttributeId), nameof(DefinitionId))]
+[Table("attribute-examples"), Index(nameof(ExampleId), nameof(TagId), nameof(AttributeId), IsUnique = true)]
 public sealed class AttributeExampleTable {
 
 	private AttributeExampleTable() { }
 
-	public AttributeExampleTable(AttributeTable attribute, TagTable tag, DefinitionTable definition, ExampleTable example) {
+	public AttributeExampleTable(AttributeTable attribute, TagTable tag, ExampleTable example) {
 		AttributeId = attribute.Id;
 		Attribute = attribute;
 		TagId = tag.Id;
 		Tag = tag;
-		DefinitionId = definition.Id;
-		Definition = definition;
 		ExampleId = example.Id;
 		Example = example;
 	}
+
+	[Column("id"), Key]
+	public int Id { get; private set; }
 
 	[Column("example"), ForeignKey(nameof(Example))]
 	public int? ExampleId { get; set; }
@@ -35,9 +37,7 @@ public sealed class AttributeExampleTable {
 
 	public AttributeTable? Attribute { get; set; }
 
-	[Column("definition"), ForeignKey(nameof(Definition))]
-	public int? DefinitionId { get; set; }
-
-	public DefinitionTable? Definition { get; set; }
+	[InverseProperty(nameof(AttributeUsageTable.Example))]
+	public ICollection<AttributeUsageTable>? Usage { get; private set; }
 
 }

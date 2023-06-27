@@ -28,21 +28,40 @@ public sealed class AnalysisDatabase : DbContext {
 
 	public DbSet<AttributeExampleTable> AttributeExamples { get; private set; }
 
-	private readonly Dictionary<(AttributeTable, TagTable, DefinitionTable, ExampleTable), AttributeExampleTable> _attributeExamples = new();
+	private readonly Dictionary<(AttributeTable, TagTable, ExampleTable), AttributeExampleTable> _attributeExamples = new();
 
-	public async Task<AttributeExampleTable?> GetAttributeExample(AttributeTable attribute, TagTable tag, DefinitionTable definition, ExampleTable example) {
-		AttributeExampleTable? result = await Get(_attributeExamples, (attribute, tag, definition, example), row => row.AttributeId == attribute.Id && row.TagId == tag.Id && row.DefinitionId == definition.Id && row.ExampleId == example.Id);
+	public async Task<AttributeExampleTable?> GetAttributeExample(AttributeTable attribute, TagTable tag, ExampleTable example) {
+		AttributeExampleTable? result = await Get(_attributeExamples, (attribute, tag, example), row => row.AttributeId == attribute.Id && row.TagId == tag.Id && row.ExampleId == example.Id);
 		if (result is not null) {
 			result.Attribute = attribute;
 			result.Tag = tag;
+			result.Example = example;
+		}
+		return result;
+	}
+
+	public Task<AttributeExampleTable> GetOrCreateAttributeExample(AttributeTable attribute, TagTable tag, ExampleTable example)
+		=> GetOrCreate(_attributeExamples, (attribute, tag, example), key => GetAttributeExample(key.Item1, key.Item2, key.Item3), () => new(attribute, tag, example));
+
+	#endregion
+
+	#region Attribute Usage Management
+
+	public DbSet<AttributeUsageTable> AttributeUsage { get; private set; }
+
+	private readonly Dictionary<(DefinitionTable, AttributeExampleTable), AttributeUsageTable> _attributeUsage = new();
+
+	public async Task<AttributeUsageTable?> GetAttributeUsage(DefinitionTable definition, AttributeExampleTable example) {
+		AttributeUsageTable? result = await Get(_attributeUsage, (definition, example), row => row.DefinitionId == definition.Id && row.ExampleId == example.Id);
+		if (result is not null) {
 			result.Definition = definition;
 			result.Example = example;
 		}
 		return result;
 	}
 
-	public Task<AttributeExampleTable> GetOrCreateAttributeExample(AttributeTable attribute, TagTable tag, DefinitionTable definition, ExampleTable example)
-		=> GetOrCreate(_attributeExamples, (attribute, tag, definition, example), key => GetAttributeExample(key.Item1, key.Item2, key.Item3, key.Item4), () => new(attribute, tag, definition, example));
+	public Task<AttributeUsageTable> GetOrCreateAttributeUsage(DefinitionTable definition, AttributeExampleTable example)
+		=> GetOrCreate(_attributeUsage, (definition, example), key => GetAttributeUsage(key.Item1, key.Item2), () => new(definition, example));
 
 	#endregion
 
@@ -200,24 +219,44 @@ public sealed class AnalysisDatabase : DbContext {
 
 	#endregion
 
-	#region Usage Management
+	#region Tag Example Management
 
 	public DbSet<TagExampleTable> TagExamples { get; private set; }
 
-	private readonly Dictionary<(TagTable, TagTable, DefinitionTable, ExampleTable), TagExampleTable> _tagExamples = new();
+	private readonly Dictionary<(TagTable, TagTable, ExampleTable), TagExampleTable> _tagExamples = new();
 
-	public async Task<TagExampleTable?> GetTagExample(TagTable tag, TagTable parent, DefinitionTable definition, ExampleTable example) {
-		TagExampleTable? result = await Get(_tagExamples, (tag, parent, definition, example), row => row.TagId == tag.Id && row.ContextId == parent.Id && row.DefinitionId == definition.Id && row.ExampleId == example.Id);
+	public async Task<TagExampleTable?> GetTagExample(TagTable tag, TagTable parent, ExampleTable example) {
+		TagExampleTable? result = await Get(_tagExamples, (tag, parent, example), row => row.TagId == tag.Id && row.ContextId == parent.Id && row.ExampleId == example.Id);
 		if (result is not null) {
 			result.Tag = tag;
 			result.Context = parent;
-			result.Definition = definition;
+			result.Example = example;
 		}
 		return result;
 	}
 
-	public Task<TagExampleTable> GetOrCreateTagExample(TagTable tag, TagTable parent, DefinitionTable definition, ExampleTable example)
-		=> GetOrCreate(_tagExamples, (tag, parent, definition, example), key => GetTagExample(key.Item1, key.Item2, key.Item3, key.Item4), () => new(tag, parent, definition, example));
+	public Task<TagExampleTable> GetOrCreateTagExample(TagTable tag, TagTable parent, ExampleTable example)
+		=> GetOrCreate(_tagExamples, (tag, parent, example), key => GetTagExample(key.Item1, key.Item2, key.Item3), () => new(tag, parent, example));
+
+	#endregion
+
+	#region Tag Usage Management
+
+	public DbSet<TagUsageTable> TagUsage { get; private set; }
+
+	private readonly Dictionary<(DefinitionTable, TagExampleTable), TagUsageTable> _tagUsage = new();
+
+	public async Task<TagUsageTable?> GetTagUsage(DefinitionTable definition, TagExampleTable example) {
+		TagUsageTable? result = await Get(_tagUsage, (definition, example), row => row.DefinitionId == definition.Id && row.ExampleId == example.Id);
+		if (result is not null) {
+			result.Definition = definition;
+			result.Example = example;
+		}
+		return result;
+	}
+
+	public Task<TagUsageTable> GetOrCreateTagUsage(DefinitionTable definition, TagExampleTable example)
+		=> GetOrCreate(_tagUsage, (definition, example), key => GetTagUsage(key.Item1, key.Item2), () => new(definition, example));
 
 	#endregion
 
