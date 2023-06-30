@@ -1,7 +1,7 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
-using RimworldExtractor.Commands;
+using RimworldAnalyzer.Commands;
 
 // Construct the root command
 Command root = new RimworldExplorerCommand();

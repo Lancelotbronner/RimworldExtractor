@@ -30,11 +30,11 @@ public sealed class TagTable {
 
 	public ModuleTable? Module { get; set; }
 
-	[InverseProperty(nameof(Relationship.Child))]
-	public ICollection<Relationship>? Parents { get; private set; }
+	[InverseProperty(nameof(RelationshipTable.Child))]
+	public ICollection<RelationshipTable>? Parents { get; private set; }
 
-	[InverseProperty(nameof(Relationship.Parent))]
-	public ICollection<Relationship>? Children { get; private set; }
+	[InverseProperty(nameof(RelationshipTable.Parent))]
+	public ICollection<RelationshipTable>? Children { get; private set; }
 
 	[InverseProperty(nameof(IssueTable.Tag))]
 	public ICollection<IssueTable>? Issues { get; private set; }

@@ -1,13 +1,12 @@
 ﻿using System.CommandLine;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Sqlite;
 using RimworldAnalyzer.Analysis;
 using RimworldAnalyzer.Analyzer;
 using RimworldAnalyzer.Installation;
 using RimworldAnalyzer.Parameters;
 
-namespace RimworldExtractor.Commands;
+namespace RimworldAnalyzer.Commands;
 
 public sealed class AnalyzeCommand : Command {
 
@@ -64,7 +63,7 @@ public sealed class AnalyzeCommand : Command {
 		AnalysisDatabase context = new(dboptions);
 		await context.Database.EnsureCreatedAsync();
 
-		Analyzer analyzer = new(parameters.Options, context);
+		RimworldAnalysisWriter analyzer = new(parameters.Options, context);
 
 		foreach (string _official in parameters.OfficialModules)
 			await analyzer.AnalyzeOfficialModule(_official);

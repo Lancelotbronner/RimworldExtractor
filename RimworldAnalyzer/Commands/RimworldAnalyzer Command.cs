@@ -1,6 +1,6 @@
 ﻿using System.CommandLine;
 
-namespace RimworldExtractor.Commands;
+namespace RimworldAnalyzer.Commands;
 
 public sealed class RimworldExplorerCommand : RootCommand {
 
@@ -12,6 +12,7 @@ public sealed class RimworldExplorerCommand : RootCommand {
 		""";
 
 		AddCommand(new AnalyzeCommand());
+		AddCommand(new ExportCommand());
 	}
 
 }

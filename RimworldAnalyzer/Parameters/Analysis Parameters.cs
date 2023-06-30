@@ -2,8 +2,8 @@
 using System.CommandLine.Binding;
 using System.CommandLine.Parsing;
 using RimworldAnalyzer.Analyzer;
+using RimworldAnalyzer.Commands;
 using RimworldAnalyzer.Installation;
-using RimworldExtractor.Commands;
 
 namespace RimworldAnalyzer.Parameters;
 

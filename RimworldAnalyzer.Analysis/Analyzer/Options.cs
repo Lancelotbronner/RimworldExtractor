@@ -7,7 +7,7 @@ public sealed class AnalyzerOptions {
 	public AnalyzerOptions() {
 		// Configure attribute defaults
 		_attribute = AttributeBehaviour.CollectExamples;
-		SetBehaviour(AttributeBehaviour.CollectExamples, false, "Name");
+		SetBehaviour(AttributeBehaviour.CollectExamples, false, "Name", "ParentName", "Abstract");
 
 		// Configure tag defaults
 		_tag = TagBehaviour.Traverse | TagBehaviour.Attributes | TagBehaviour.CollectExamples;

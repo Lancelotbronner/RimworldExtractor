@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 namespace RimworldAnalyzer.Analysis;
 
 [Table("relationships"), Index(nameof(ParentId), nameof(ChildId), nameof(ContextId), IsUnique = true)]
-public sealed class Relationship {
+public sealed class RelationshipTable {
 
-	private Relationship() { }
+	private RelationshipTable() { }
 
-	public Relationship(TagTable parent, TagTable child, TagTable? context) {
+	public RelationshipTable(TagTable parent, TagTable child, TagTable? context) {
 		ParentId = parent.Id;
 		Parent = parent;
 		ChildId = child.Id;

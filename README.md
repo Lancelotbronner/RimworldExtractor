@@ -13,12 +13,13 @@ rimworld-analyzer --include-officials
 
 - Collects XML tag and attribute examples
 - Includes tag context, so you will know the parent of tags under `li`
-- Includes modules, definitions and filepaths for a better overview
-- Reports are simple SQLite databases for easier transformation and consumption
+- Includes modules, definitions, and filepaths for a better overview
+- Consume those reports as either SQLite or JSON
 
 ## Roadmap
 
-I'd like to provide a versioned JSON format which mirrors the SQLite database.
+I have some functionality to configure the behaviour per tag and attributes.
+I'd like to add them to the commands and possibly expand on them.
 
 Here's what I'd like to improve on the analysis:
 

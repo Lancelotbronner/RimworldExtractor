@@ -13,10 +13,12 @@
     <None Remove="Tables\" />
     <None Remove="Extensions\" />
     <None Remove="Analyzer\" />
+    <None Remove="Transformations\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Tables\" />
     <Folder Include="Extensions\" />
     <Folder Include="Analyzer\" />
+    <Folder Include="Transformations\" />
   </ItemGroup>
 </Project>

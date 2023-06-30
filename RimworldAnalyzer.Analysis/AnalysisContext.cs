@@ -10,6 +10,16 @@ public sealed class AnalysisDatabase : DbContext {
 
 	}
 
+	public async Task Apply<TTransformation>(TTransformation transformation) where TTransformation : IArchiveTransformation {
+		Database.BeginTransaction();
+		try {
+			await transformation.Transform(this);
+		} catch {
+			Database.RollbackTransaction();
+		}
+		Database.CommitTransaction();
+	}
+
 	#region Attribute Management
 
 	public DbSet<AttributeTable> Attributes { get; private set; }
@@ -163,13 +173,13 @@ public sealed class AnalysisDatabase : DbContext {
 
 	#region Relationship Management
 
-	public DbSet<Relationship> Relationships { get; private set; }
+	public DbSet<RelationshipTable> Relationships { get; private set; }
 
-	private readonly Dictionary<(TagTable, TagTable, TagTable?), Relationship> _relationships = new();
+	private readonly Dictionary<(TagTable, TagTable, TagTable?), RelationshipTable> _relationships = new();
 
-	public async Task<Relationship?> GetRelationship(TagTable parent, TagTable child, TagTable? context) {
+	public async Task<RelationshipTable?> GetRelationship(TagTable parent, TagTable child, TagTable? context) {
 		int? contextId = context?.Id;
-		Relationship? relationship = await Get(_relationships, (parent, child, context), row => row.ParentId == parent.Id && row.ChildId == child.Id && row.ContextId == contextId);
+		RelationshipTable? relationship = await Get(_relationships, (parent, child, context), row => row.ParentId == parent.Id && row.ChildId == child.Id && row.ContextId == contextId);
 		if (relationship is not null) {
 			relationship.Parent = parent;
 			relationship.Child = child;
@@ -178,7 +188,7 @@ public sealed class AnalysisDatabase : DbContext {
 		return relationship;
 	}
 
-	public Task<Relationship> GetOrCreateRelationship(TagTable parent, TagTable child, TagTable? context)
+	public Task<RelationshipTable> GetOrCreateRelationship(TagTable parent, TagTable child, TagTable? context)
 		=> GetOrCreate(_relationships, (parent, child, context), key => GetRelationship(key.Item1, key.Item2, key.Item3), () => new(parent, child, context));
 
 	#endregion

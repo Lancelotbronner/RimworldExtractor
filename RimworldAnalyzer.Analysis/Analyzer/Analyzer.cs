@@ -5,9 +5,9 @@ using RimworldAnalyzer.Installation;
 
 namespace RimworldAnalyzer.Analyzer;
 
-public class Analyzer {
+public class RimworldAnalysisWriter {
 
-	public Analyzer(AnalyzerOptions options, AnalysisDatabase context) {
+	public RimworldAnalysisWriter(AnalyzerOptions options, AnalysisDatabase context) {
 		_context = context;
 		Options = options;
 	}
@@ -77,11 +77,11 @@ public class Analyzer {
 		using FileStream file = File.OpenRead(pathOfAbout);
 		about.Load(file);
 
+		XmlElement? metadata = about["ModMetaData"];
 		string filename = Path.GetFileName(path);
-		//TODO: Retrieve the correct one, XPath?
-		string? identifier = about.GetElementsByTagName("packageId")[0]?.InnerText;
-		string? name = about.GetElementsByTagName("name")[0]?.InnerText;
-		string? version = about.GetElementsByTagName("modVersion")[0]?.InnerText;
+		string? identifier = metadata?["packageId"]?.InnerText;
+		string? name = metadata?["name"]?.InnerText;
+		string? version = metadata?["modVersion"]?.InnerText;
 
 		ModuleTable module = await _context.GetOrCreateModule(identifier ?? filename);
 		module.Name = name ?? filename;
