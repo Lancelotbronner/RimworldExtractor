@@ -54,14 +54,14 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteAttributes() {
 		json.WriteStartArray("attributes");
-		await foreach (AttributeTable row in context.Attributes.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.Attributes
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (AttributeTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
 			json.WriteStringValue(row.Identifier);
 			json.WriteStringValue(row.Name);
-			if (row.ModuleId is int module)
-				json.WriteNumberValue(module);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ModuleId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();
@@ -69,20 +69,14 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteAttributeExamples() {
 		json.WriteStartArray("attribute-examples");
-		await foreach (AttributeExampleTable row in context.AttributeExamples.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.AttributeExamples
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (AttributeExampleTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
-			if (row.ExampleId is int example)
-				json.WriteNumberValue(example);
-			else
-				json.WriteNullValue();
-			if (row.TagId is int tag)
-				json.WriteNumberValue(tag);
-			else
-				json.WriteNullValue();
-			if (row.AttributeId is int attribute)
-				json.WriteNumberValue(attribute);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ExampleId);
+			json.WriteIdentifierColumnValue(row.TagId);
+			json.WriteIdentifierColumnValue(row.AttributeId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();
@@ -92,14 +86,8 @@ public readonly struct ExportAnalysisAsJson {
 		json.WriteStartArray("attribute-usage");
 		await foreach (AttributeUsageTable row in context.AttributeUsage.AsNoTracking().AsAsyncEnumerable()) {
 			json.WriteStartArray();
-			if (row.ExampleId is int example)
-				json.WriteNumberValue(example);
-			else
-				json.WriteNullValue();
-			if (row.DefinitionId is int definition)
-				json.WriteNumberValue(definition);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ExampleId);
+			json.WriteIdentifierColumnValue(row.DefinitionId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();
@@ -107,14 +95,14 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteClasses() {
 		json.WriteStartArray("classes");
-		await foreach (ClassTable row in context.Classes.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.Classes
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (ClassTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
 			json.WriteStringValue(row.Identifier);
 			json.WriteStringValue(row.Name);
-			if (row.ModuleId is int module)
-				json.WriteNumberValue(module);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ModuleId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();
@@ -122,22 +110,16 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteDefinitions() {
 		json.WriteStartArray("definitions");
-		await foreach (DefinitionTable row in context.Definitions.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.Definitions
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (DefinitionTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
 			json.WriteStringValue(row.Identifier);
 			json.WriteBooleanValue(row.IsAbstract);
-			if (row.ParentId is int parent)
-				json.WriteNumberValue(parent);
-			else
-				json.WriteNullValue();
-			if (row.ModuleId is int module)
-				json.WriteNumberValue(module);
-			else
-				json.WriteNullValue();
-			if (row.ResourceId is int resource)
-				json.WriteNumberValue(resource);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ParentId);
+			json.WriteIdentifierColumnValue(row.ModuleId);
+			json.WriteIdentifierColumnValue(row.ResourceId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();
@@ -145,7 +127,10 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteExamples() {
 		json.WriteStartArray("examples");
-		await foreach (ExampleTable row in context.Examples.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.Examples
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (ExampleTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStringValue(row.Value);
 		}
 		json.WriteEndArray();
@@ -153,7 +138,10 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteIssues() {
 		json.WriteStartArray("issues");
-		await foreach (IssueTable row in context.Issues.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.Issues
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (IssueTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
 			json.WriteNumberValue((byte)row.Severity);
 			json.WriteStringValue(row.Message);
@@ -164,7 +152,10 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteModules() {
 		json.WriteStartArray("modules");
-		await foreach (ModuleTable row in context.Modules.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.Modules
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (ModuleTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
 			json.WriteStringValue(row.Identifier);
 			json.WriteStringValue(row.Name);
@@ -177,20 +168,14 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteRelationships() {
 		json.WriteStartArray("relationships");
-		await foreach (RelationshipTable row in context.Relationships.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.Relationships
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (RelationshipTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
-			if (row.ParentId is int parent)
-				json.WriteNumberValue(parent);
-			else
-				json.WriteNullValue();
-			if (row.ChildId is int child)
-				json.WriteNumberValue(child);
-			else
-				json.WriteNullValue();
-			if (row.ContextId is int context)
-				json.WriteNumberValue(context);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ParentId);
+			json.WriteIdentifierColumnValue(row.ChildId);
+			json.WriteIdentifierColumnValue(row.ContextId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();
@@ -198,13 +183,13 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteResources() {
 		json.WriteStartArray("resources");
-		await foreach (ResourceTable row in context.Resources.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.Resources
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (ResourceTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
 			json.WriteStringValue(row.Path);
-			if (row.ModuleId is int module)
-				json.WriteNumberValue(module);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ModuleId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();
@@ -212,14 +197,14 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteTags() {
 		json.WriteStartArray("tags");
-		await foreach (TagTable row in context.Tags.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.Tags
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (TagTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
 			json.WriteStringValue(row.Identifier);
 			json.WriteStringValue(row.Name);
-			if (row.ModuleId is int module)
-				json.WriteNumberValue(module);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ModuleId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();
@@ -227,20 +212,13 @@ public readonly struct ExportAnalysisAsJson {
 
 	private async Task WriteTagExamples() {
 		json.WriteStartArray("tag-examples");
-		await foreach (TagExampleTable row in context.TagExamples.AsNoTracking().AsAsyncEnumerable()) {
+		var rows = context.TagExamples
+			.AsNoTracking()
+			.OrderBy(row => row.Id);
+		await foreach (TagExampleTable row in rows.AsAsyncEnumerable()) {
 			json.WriteStartArray();
-			if (row.ExampleId is int example)
-				json.WriteNumberValue(example);
-			else
-				json.WriteNullValue();
-			if (row.TagId is int tag)
-				json.WriteNumberValue(tag);
-			else
-				json.WriteNullValue();
-			if (row.ContextId is int context)
-				json.WriteNumberValue(context);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ExampleId);
+			json.WriteIdentifierColumnValue(row.RelationshipId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();
@@ -250,14 +228,8 @@ public readonly struct ExportAnalysisAsJson {
 		json.WriteStartArray("tag-usage");
 		await foreach (TagUsageTable row in context.TagUsage.AsNoTracking().AsAsyncEnumerable()) {
 			json.WriteStartArray();
-			if (row.ExampleId is int example)
-				json.WriteNumberValue(example);
-			else
-				json.WriteNullValue();
-			if (row.DefinitionId is int definition)
-				json.WriteNumberValue(definition);
-			else
-				json.WriteNullValue();
+			json.WriteIdentifierColumnValue(row.ExampleId);
+			json.WriteIdentifierColumnValue(row.DefinitionId);
 			json.WriteEndArray();
 		}
 		json.WriteEndArray();

@@ -1,4 +1,4 @@
-# Rimworld Extractor
+# Rimworld Analyzer
 
 This is a very simple tool to extract and analyze XML tag usage of Rimworld mods.
 

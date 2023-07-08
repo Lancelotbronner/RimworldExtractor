@@ -28,7 +28,7 @@ public sealed class JsonCommand : Command {
 		AnalysisDatabase context = new(dboptions);
 
 		output ??= new(Path.ChangeExtension(input.FullName, "json"));
-		using FileStream file = output.OpenWrite();
+		using FileStream file = File.Open(output.FullName, FileMode.Create);
 		Utf8JsonWriter json = new(file);
 
 		ExportAnalysisAsJson transform = new(context, json);

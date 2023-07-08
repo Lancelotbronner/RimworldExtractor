@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace RimworldAnalyzer.Analysis;
@@ -17,5 +18,12 @@ public static partial class RimworldAnalysisExtensions {
 
 	private static string SpaceCaptures(Match match)
 		=> $"{match.Groups[1]} {match.Groups[2]}";
+
+	internal static void WriteIdentifierColumnValue(this Utf8JsonWriter json, int? value) {
+		if (value is int id)
+			json.WriteNumberValue(id - 1);
+		else
+			json.WriteNullValue();
+	}
 
 }

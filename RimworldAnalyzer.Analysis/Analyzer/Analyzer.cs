@@ -15,9 +15,6 @@ public class RimworldAnalysisWriter {
 	public AnalyzerOptions Options { get; }
 
 	private readonly AnalysisDatabase _context;
-	private DefinitionTable _definition = null!;
-	private TagTable? _tagContext;
-	private TagTable? _tagParent;
 
 	private Task SaveChangesAsync()
 		=> _context.SaveChangesAsync();
@@ -191,24 +188,23 @@ public class RimworldAnalysisWriter {
 		}
 
 		// Update the definition
-		_definition = await _context.GetOrCreateDefinition(name);
-		_definition.ModuleId = module.Id;
-		_definition.Module = module;
-		_definition.ClassId = @class.Id;
-		_definition.Class = @class;
-		_definition.ResourceId = resource.Id;
-		_definition.Resource = resource;
-		_definition.IsAbstract = isAbstract;
-		_definition.ParentId = parent?.Id;
-		_definition.Parent = parent;
+		DefinitionTable definition = await _context.GetOrCreateDefinition(name);
+		definition.ModuleId = module.Id;
+		definition.Module = module;
+		definition.ClassId = @class.Id;
+		definition.Class = @class;
+		definition.ResourceId = resource.Id;
+		definition.Resource = resource;
+		definition.IsAbstract = isAbstract;
+		definition.ParentId = parent?.Id;
+		definition.Parent = parent;
 
 		// Log the definition
-		Debug.WriteLine(_definition.ToDeclarationString());
+		Debug.WriteLine(definition.ToDeclarationString());
 		Debug.Indent();
 
 		// Analyze the definition's tag without a parent
-		_tagContext = _tagParent = null!;
-		await AnalyzeTag(node, module, resource);
+		await AnalyzeTag(node, module, resource, definition, null, null);
 
 		Debug.Unindent();
 	}
@@ -217,7 +213,7 @@ public class RimworldAnalysisWriter {
 
 	#region Tag Analysis
 
-	private async Task AnalyzeTag(XmlElement node, ModuleTable module, ResourceTable resource) {
+	private async Task AnalyzeTag(XmlElement node, ModuleTable module, ResourceTable resource, DefinitionTable definition, TagTable? context, TagTable? parent) {
 		// Collection information on the tag
 		string? rawValue = node.ChildNodes.Count is 1 && node.FirstChild is XmlText text ? text.InnerText : null;
 		TagBehaviour behaviour = Options.BehaviourOfTag(node.Name);
@@ -231,16 +227,20 @@ public class RimworldAnalysisWriter {
 		// Update the tag
 		TagTable tag = await _context.GetOrCreateTag(node.Name);
 
-		// Configure relationships
-		TagTable? tagContext = _tagContext;
-		TagTable? parent = _tagParent;
-		if (_tagParent is not null)
-			await _context.GetOrCreateRelationship(_tagParent, tag, _tagContext);
-		_tagContext = _tagParent;
-		_tagParent = tag;
+		if (parent is not null) {
+			// Configure relationships
+			RelationshipTable relationship = await _context.GetOrCreateRelationship(parent, tag, context);
+
+			// Collect examples
+			if (behaviour.HasFlag(TagBehaviour.CollectExamples) && rawValue is not null) {
+				ExampleTable value = await _context.GetOrCreateExample(rawValue);
+				TagExampleTable example = await _context.GetOrCreateTagExample(relationship, value);
+				await _context.GetOrCreateTagUsage(definition, example);
+			}
+		}
 
 		if (behaviour.HasFlag(TagBehaviour.Attributes))
-			await Task.WhenAll(node.Attributes.OfType<XmlAttribute>().Select(AnalyzeAttribute));
+			await Task.WhenAll(node.Attributes.OfType<XmlAttribute>().Select(attribute => AnalyzeAttribute(attribute, definition, tag)));
 
 		//TODO: Tags keep array-ing near-infinitely, investigate that and possibly remove?
 
@@ -251,17 +251,11 @@ public class RimworldAnalysisWriter {
 		//	_tagParent = array;
 		//}
 
-		if (behaviour.HasFlag(TagBehaviour.CollectExamples) && rawValue is not null) {
-			ExampleTable value = await _context.GetOrCreateExample(rawValue);
-			TagExampleTable example = await _context.GetOrCreateTagExample(tag, parent!, value);
-			await _context.GetOrCreateTagUsage(_definition, example);
-		}
-
 		if (behaviour.HasFlag(TagBehaviour.Traverse))
-			await Task.WhenAll(node.OfType<XmlElement>().Select(node => AnalyzeTag(node, module, resource)));
+			await Task.WhenAll(node.OfType<XmlElement>().Select(node => AnalyzeTag(node, module, resource, definition, parent, tag)));
 	}
 
-	private async Task AnalyzeAttribute(XmlAttribute node) {
+	private async Task AnalyzeAttribute(XmlAttribute node, DefinitionTable definition, TagTable tag) {
 		Debug.WriteLine(@$"@{node.Name} ""{node.Value}""");
 
 		AttributeBehaviour behaviour = Options.BehaviourOfAttribute(node.Name);
@@ -269,8 +263,8 @@ public class RimworldAnalysisWriter {
 
 		if (behaviour.HasFlag(AttributeBehaviour.CollectExamples)) {
 			ExampleTable value = await _context.GetOrCreateExample(node.Value);
-			AttributeExampleTable example = await _context.GetOrCreateAttributeExample(attribute, _tagParent!, value);
-			await _context.GetOrCreateAttributeUsage(_definition, example);
+			AttributeExampleTable example = await _context.GetOrCreateAttributeExample(attribute, tag, value);
+			await _context.GetOrCreateAttributeUsage(definition, example);
 		}
 	}
 

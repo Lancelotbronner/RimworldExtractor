@@ -233,20 +233,19 @@ public sealed class AnalysisDatabase : DbContext {
 
 	public DbSet<TagExampleTable> TagExamples { get; private set; }
 
-	private readonly Dictionary<(TagTable, TagTable, ExampleTable), TagExampleTable> _tagExamples = new();
+	private readonly Dictionary<(RelationshipTable, ExampleTable), TagExampleTable> _tagExamples = new();
 
-	public async Task<TagExampleTable?> GetTagExample(TagTable tag, TagTable parent, ExampleTable example) {
-		TagExampleTable? result = await Get(_tagExamples, (tag, parent, example), row => row.TagId == tag.Id && row.ContextId == parent.Id && row.ExampleId == example.Id);
+	public async Task<TagExampleTable?> GetTagExample(RelationshipTable relationship, ExampleTable example) {
+		TagExampleTable? result = await Get(_tagExamples, (relationship, example), row => row.RelationshipId == relationship.Id && row.ExampleId == example.Id);
 		if (result is not null) {
-			result.Tag = tag;
-			result.Context = parent;
+			result.Relationship = relationship;
 			result.Example = example;
 		}
 		return result;
 	}
 
-	public Task<TagExampleTable> GetOrCreateTagExample(TagTable tag, TagTable parent, ExampleTable example)
-		=> GetOrCreate(_tagExamples, (tag, parent, example), key => GetTagExample(key.Item1, key.Item2, key.Item3), () => new(tag, parent, example));
+	public Task<TagExampleTable> GetOrCreateTagExample(RelationshipTable relationship, ExampleTable example)
+		=> GetOrCreate(_tagExamples, (relationship, example), key => GetTagExample(key.Item1, key.Item2), () => new(relationship, example));
 
 	#endregion
 
